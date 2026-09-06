@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>full Page Pixel</title>
+    <style>
+        * {
+            scrollbar-width: none;
+            overflow: hidden;
+            gap: 0px;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        table {
+            border: 1px solid black;
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            gap: 0px;
+            border-spacing: 0px;
+        }
+
+        td {
+            border: 1px solid black;
+        }
+
+        #menu {
+            border: 1px solid black;
+            border-radius: 10px;
+            background-color: #ffffffb1;
+            resize: both;
+        }
+
+        tr {
+            border: 1px solid rgb(0, 0, 0);
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+    <div style="display: block; position: fixed; top: 0px; left: 0px; z-index: 9999;" id="menu">
+        <input type="color" id="colorInput_0" value="white"><span> 0</span>
+        <br>
+        <input type="color" id="colorInput_1" value="black"><span> 1</span>
+        <br>
+        <input type="color" id="colorInput_2" value="red"><span> 2</span>
+        <br>
+        <input type="color" id="colorInput_3" value="blue"><span> 3</span>
+        <br>
+        <input type="color" id="colorInput_4" value="green"><span> 4</span>
+        <br>
+        <input type="color" id="colorInput_5" value="yellow"><span> 5</span>
+        <br>
+        <input type="color" id="colorInput_6" value="cyan"><span> 6</span>
+        <br>
+        <input type="color" id="colorInput_7" value="orange"><span> 7</span>
+        <br>
+        <input type="color" id="colorInput_8" value="grey"><span> 8</span>
+        <hr>
+        <textarea id="commandInput"></textarea><button onclick="evalCommand()">Ausführen</button>
+        <br>
+        <span>Multiplier</span>
+        <br>
+        <input id="multiInput" type="range" style="width: 100%" min="0.25" step="0.25" max="100" value="5" onchange="multiplier = this.value;">
+        <br>
+        <button id="rasterToggler" onclick="toggleRaster()">Raster ausblenden</button><button onclick="clearCanvas()">Raster Leeren</button><button onclick="randomize()">Zufälliges Muster</button>
+        <!-- ["white","black","red","blue","green","yellow","cyan","orange","grey","#777666"] -->
+    </div>
+    <table>
+    </table>
+    <canvas id="offscreen" style="display:none"></canvas>
+    <script>
+        const table = document.querySelector('table');
+        let multiplier = 5;
+        let free = true;
+        let oneRow = 0;
+        let pixelA = '';
+        let pixelB = '';
+        let fill = false;
+
+        console.log(calculate());
+
+        window.onload = () => {
+            setTimeout(() => {
+                document.querySelectorAll('input[type="color"]').forEach((e) => {
+                    e.addEventListener('change',(event) => {
+                        colors[Number(e.id.replace('colorInput_',''))] = e.value;
+                    })
+                })
+            },1000);
+        }
+
+        function calculate() {
+            if(free === true) {
+                free = false;
+                table.style.height = window.innerHeight + 'px';
+                table.style.width = window.innerWidth + 'px';
+
+                //generate();
+            }
+        }
+
+        function generate() {
+            const colums = window.innerHeight/multiplier;
+            const rows = window.innerWidth/multiplier;
+            table.innerHTML = '';
+            console.log({
+                "cols": colums,
+                "rows": rows
+            });
+            if(confirm('Fortfahren?')) {
+                let columIndex = 0;
+                for(let c = 1; c <= colums; c = c + multiplier) {
+                    const colum = document.createElement('tr');
+                    colum.innerHTML = ``;
+
+                    let rowIndex = 1;
+                    columIndex++;
+
+                    for(let r = 1; r <= rows; r = r + multiplier) {
+                        colum.innerHTML += `<td style="width: ${1*multiplier}px; height: ${1*multiplier}px;" id="${columIndex}x${rowIndex}"></td>`;
+                        rowIndex++;
+                    }
+
+                    table.appendChild(colum);
+                    rowIndex = 1;
+                }
+            }
+            oneRow = document.querySelector('tr').querySelectorAll('td').length;
+            eventListener();
+            free = true;
+        }
+
+        function generate2(time = 50) {
+            const colums = window.innerHeight/multiplier;
+            const rows = window.innerWidth/multiplier;
+            table.innerHTML = '';
+            console.log({
+                "cols": colums,
+                "rows": rows
+            });
+            if(confirm('Fortfahren?')) {
+                let columIndex = 0;
+                let c = 1;
+                let inter = setInterval(() => {
+                    if(c <= colums){
+                        console.log(c);
+                        const colum = document.createElement('tr');
+                        colum.innerHTML = ``;
+
+                        let rowIndex = 1;
+                        columIndex++;
+
+                        for(let r = 1; r <= rows; r = r + multiplier) {
+                            colum.innerHTML += `<td style="width: ${1*multiplier}px; height: ${1*multiplier}px;" id="${columIndex}x${rowIndex}"></td>`;
+                            rowIndex++;
+                        }
+
+                        table.appendChild(colum);
+                        rowIndex = 1;
+                        c += multiplier;
+                    } else {
+                        clearInterval(inter);
+                        oneRow = document.querySelector('tr').querySelectorAll('td').length;
+                        eventListener();
+                        free = true;
+                    }
+                },time);
+            }
+        }
+
+        function genearte3(rows,colums) {
+            for(let r = 0; r <= rows; r++) {
+                table.innerHTML += `<tr id="${r}"></tr>`;
+            }
+            document.querySelectorAll('tr').forEach(row => {
+                for(let c = 0; c <= colums; c++) {
+                    row.innerHTML += `<td id="${c}x${row.id}"></td>`;
+                }
+            });
+            document.querySelectorAll('td').forEach(colum => {
+                colum.style.width = colum.style.height = `${1*multiplier}px`;
+            });
+        }
+
+        function random(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function eventListener() {
+            console.log('eventListener');
+            document.body.onkeydown = (e) => {
+                if([0,1,2,3,4,5,6,7,8,9].includes(Number(e.key)) && e.altKey === true) {
+                    e.preventDefault();
+                    choosen = Number(e.key);
+                    if(choosen === 9 || choosen === undefined) {
+                        colors[9] = `#${random(0,999999).toString().padEnd(6,random(0,9))}`;
+                        console.log(colors[9]);
+                    }
+                    console.log(colors[choosen]);
+                    console.log('%cText','color: ' + colors[choosen])
+                } else if(e.key === 'r' && e.altKey === true) {
+                    e.preventDefault();
+                    toggleRaster();
+                } else if(e.key === 'f' && e.altKey === true) {
+                    e.preventDefault();
+                    switch(fill){
+                        case true :
+                            if(pixelA !== '' || pixelB !== '') {
+                                document.getElementById(pixelA).style.border = '1px solid black';
+                                document.getElementById(pixelB).style.border = '1px solid black';
+                                pixelA = pixelB = '';
+                            }
+                            fill = false;
+                            break;
+                        case false : 
+                            fill = true;
+                            break;
+                    }
+                } else if(e.key === 'm' && e.altKey === true) {
+                    e.preventDefault();
+                    toggleMenu();
+                }
+            }
+            document.querySelectorAll('td').forEach(element => {
+                element.onclick = (e) => changeColor(element);
+                element.style.backgroundColor = 'white';
+            });
+        }
+
+        function calculateFillState(baseColor = ['white']) {
+            let base = [];
+            let others = [];
+            let all = document.querySelectorAll('td').length;
+            
+            document.querySelectorAll('td').forEach((e) => {
+                if(baseColor.includes(e.style.backgroundColor)) {
+                    base.push(e.id);
+                } else {
+                    others.push(e.id);
+                }
+            });
+
+            let results = {
+                "base": (base.length/all*100).toFixed(2) + '%',
+                "others": (others.length/all*100).toFixed(2) + '%',
+                "lengths": {
+                    "base": base.length,
+                    "others": others.length
+                }
+            }
+            return results;
+        }
+
+        let colors = ["white","black","red","blue","green","yellow","cyan","orange","grey","#777666"];
+        let choosen = 0;
+        let raster = true;
+        let reviewLogs = [];
+
+        function evalCommand() {
+            eval(document.getElementById('commandInput').value);
+            document.querySelector('button[onclick="evalCommand()"]').textContent = 'Ausgeführt';
+            setTimeout(() => {
+                document.querySelector('button[onclick="evalCommand()"]').textContent = 'Ausführen';
+            },3000);
+        }
+
+        function toggleRaster() {
+            switch(raster){
+                case true :
+                    document.querySelectorAll('td').forEach(e => {
+                        e.style.border = 'none';
+                    });
+                    document.getElementById('rasterToggler').textContent = 'Raster Einblenden';
+                    raster = false;
+                    break;
+                case false : 
+                    document.querySelectorAll('td').forEach(e => {
+                        e.style.border = '1px solid black';
+                    });
+                    document.getElementById('rasterToggler').textContent = 'Raster Ausblenden';
+                    raster = true;
+                    break;
+            }
+        }
+
+        function changeColor(element) {
+            console.log('changeColor');
+            console.log(fill ? 'on' : 'off');
+            if(fill === false) {
+                let color = colors[choosen];
+                console.log({
+                    "element": element,
+                    "color": color,
+                });
+                reviewLogs.push({"element": element,"newColor":color});
+                element.style.backgroundColor = color;
+            } else {
+                if(pixelA === '') {
+                    pixelA = element.id;
+                    element.style.borderColor = 'red';
+                } else if(pixelA !== '' && pixelB === '') {
+                    pixelB = element.id;
+                    fillArea(pixelA,pixelB);
+
+                    element.style.borderColor = 'blue';
+
+                    let pixA = pixelA;
+                    let pixB = pixelB;
+                    pixelA = pixelB = '';
+
+                    console.log(pixA);
+                    console.log(pixB);
+
+                    document.getElementById(pixA).style.border = '1px solid black';
+                    document.getElementById(pixB).style.border = '1px solid black';
+                }
+            }
+        }
+
+        function clearCanvas() {
+            document.querySelectorAll('td').forEach(element => element.style.backgroundColor = 'white');
+        }
+
+        let speed = 1
+        let minBuffer = 100;
+
+        function replay() {
+            console.log('Start Vorbereitungen');
+            clearCanvas();
+            setTimeout(() => {
+                console.log('Start Replay');
+                let buffer = minBuffer/speed;
+                console.log(buffer);
+
+                let inter = setInterval(() => {
+                    if(reviewLogs.length > 0) {
+                        const element = reviewLogs[0].element;
+                        const color = reviewLogs[0].newColor;
+
+                        element.style.backgroundColor = color;
+                        reviewLogs.shift();
+                        console.log({
+                            "element": element,
+                            "color": color,
+                            "real": element.style.backgroundColor,
+                            "lenght": reviewLogs.length,
+                        });
+                    } else if(reviewLogs.length === 0){
+                        clearInterval(inter);
+                        console.log('Fertig');
+                    }
+                },buffer);
+            },5000)
+        }
+
+        function randomize() {
+            const all = document.querySelectorAll('td');
+            all.forEach((e) => {
+                let hue = random(0,36);
+                let sat = random(0,100);
+                let light = random(0,100);
+                e.style.backgroundColor = `hsl(${hue*10}deg,${sat}%,${light}%)`;
+                reviewLogs.push({"element": e,"newColor": `hsl(${hue*10}deg,${sat}%,${light}%)`});
+            });
+
+        }
+
+        function fillArea(in1, in2) {
+            const [r1, c1] = in1.split('x').map(Number);
+            const [r2, c2] = in2.split('x').map(Number);
+
+            const startR = Math.min(r1, r2);
+            const endR = Math.max(r1, r2);
+            const startC = Math.min(c1, c2);
+            const endC = Math.max(c1, c2);
+
+            console.log({ startR, startC, endR, endC, color: colors[choosen] });
+
+            const all = [];
+            for (let r = startR; r <= endR; r++) {
+                for (let c = startC; c <= endC; c++) {
+                    all.push(document.getElementById(`${r}x${c}`));
+                }
+            }
+
+            console.log(all);
+
+            all.forEach((e) => {
+                e.style.backgroundColor = colors[choosen];
+                reviewLogs.push({ "element": e, "newColor": colors[choosen] });
+            });
+        }
+
+        function findPixels(color) {
+            document.querySelectorAll('td').forEach(e => {
+                color.forEach(c => {
+                    if(areColorsSimilar(c,e.style.backgroundColor)) {
+                        e.dataset.found = 'true';
+                    }
+                })
+            })
+        }
+
+        function unFound() {
+            document.querySelectorAll('td').forEach(e => {
+                if(e.dataset.found) {
+                    e.dataset = '';
+                }
+            })
+        }
+
+        function areColorsSimilar(color1, color2, threshold = 50) {
+            function parseColor(colorStr) {
+                const elem = document.createElement('div');
+                elem.style.color = colorStr;
+                document.body.appendChild(elem);
+                
+                const rgbStr = window.getComputedStyle(elem).color;
+                document.body.removeChild(elem);
+                
+                const match = rgbStr.match(/\d+/g);
+                if (!match) return [0, 0, 0];
+                return match.map(Number);
+            }
+
+            const [r1, g1, b1] = parseColor(color1);
+            const [r2, g2, b2] = parseColor(color2);
+
+            const distance = Math.sqrt(
+                Math.pow(r2 - r1, 2) + 
+                Math.pow(g2 - g1, 2) + 
+                Math.pow(b2 - b1, 2)
+            );
+
+            return distance <= threshold;
+        }
+
+        function exportCanvas() {
+            let data = [];
+            document.querySelectorAll('td').forEach(e => {
+                data.push(e.style.backgroundColor);
+            })
+            data = compromize(data);
+            let information = {
+                "multiplier": multiplier,
+                "table-height": table.style.height,
+                "table-width": table.style.width,
+                "px": 1*multiplier,
+                "data": data,
+            }
+            return information;
+        }
+
+        function importCanvas(data) {
+            multiplier = data["multiplier"];
+            table.style.width = data["table-width"];
+            table.style.height = data["table-height"];
+            const pixels = decompress(data["data"]);
+
+            let index = 0;
+            generate();
+            document.querySelectorAll('td').forEach(e => {
+                e.style.backgroundColor = pixels[index];
+                e.style.height = e.style.width = data["px"] + 'px';
+                index++;
+            });
+        }
+
+        function compromize(arr = []) {
+            if (arr.length === 0) return [];
+
+            const result = [];
+            let count = 1;
+
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] === arr[i + 1]) {
+                    count++;
+                } else {
+                const token = count > 1 ? `${count}${arr[i]}` : `${arr[i]}`;
+                    result.push(token);
+                    count = 1;
+                }
+            }
+
+            return result;
+        }
+
+        function decompress(arr = []) {
+            const result = [];
+
+            for (const token of arr) {
+                const match = token.match(/^(\d+)(.*)$/);
+
+                if (match) {
+                    const count = parseInt(match[1], 10);
+                    const value = match[2];
+                    for (let i = 0; i < count; i++) {
+                        result.push(value);
+                    }
+                } else {
+                    result.push(token);
+                }
+            }
+
+            return result;
+        }
+
+        let menuMode = true;
+
+        function toggleMenu() {
+            switch(menuMode){
+                case true :
+                    document.getElementById('menu').style.display = 'none';
+                    menuMode = false;
+                    break;
+                case false : 
+                    document.getElementById('menu').style.display = 'block';
+                    menuMode = true;
+                    break;
+            }
+        }
+
+        function setColor([x,y],color) {
+            document.getElementById(`${x}x${y}`).style.backgroundColor = color;
+            reviewLogs.push({"element": getPixel(x,y) ,"newColor": color});
+        }
+
+        function getPixel(x,y) {
+            return document.getElementById(`${x}x${y}`);
+        }
+
+        /*function connectPixels(p1,p2) {
+            let x = [];
+            let y = [];
+
+            x.push(p1.replace(/x\d+/,''));
+            x.push(p2.replace(/\d+x/,''));
+            y.push(p1.replace(/x\d+/,''));
+            y.push(p2.replace(/\d+x/,''));
+
+
+        }*/
+        //window.onresize = () => calculate();
+
+        function drawJSON(array,w,h) { // Mona Lisa 77x53
+            let html = '';
+            for(let x = 0; x <= w-1; x++) {
+                let tr = '';
+                for(let y = 0; y <= h-1; y++) {
+                    console.log(array[x][y]);
+                    tr += `<td id="${x}x${y}" style="background-color: ${array[x][y]}"></td>`;
+                }
+                html += '<tr>' + tr + '</tr>';
+            }
+            table.innerHTML = html;
+        }
+
+        generate();
+    </script>
+</body>
+</html>
