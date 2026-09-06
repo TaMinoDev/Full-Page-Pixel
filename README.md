@@ -31,6 +31,11 @@ What You **CAN**:
     ],
   ]
   ```
+  A Not that Good Drawing:
   ![UI](fullPagePixel.png)
+  A Simple jump and run game:
+  ![UI](jumpAndRun.png)
+  A noise Algorithme:
+  ![UI](noiseIguess.png)
 
   Maby I change the Language from German English to English... but I'm not sure right now.
